@@ -126,7 +126,7 @@ public class FuriousBot extends TelegramLongPollingBot {
 
     @Override
     public String getBotToken() {
-        return "402476540:AAEwHy4LNFdAmLP9I8H5u_22J_1z5OsINcQ";
+        return "******************************";
     }
 
 
