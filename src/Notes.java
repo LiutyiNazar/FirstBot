@@ -8,16 +8,16 @@ import java.util.List;
 public class Notes {
     private String writing;
     public List<String> notices = new ArrayList<>();
-    private static int NoteID ;
+    private  int NoteID = 0;
 
     public void writeNote(String string){
 
-        notices.add( string);
+        notices.add(string);
 
     }
 
     public int getLastID(){
-        return notices.size()-1;
+        return notices.size()-1;//notices.size()-1;
     }
 
     public String getLastNote(){
@@ -26,9 +26,12 @@ public class Notes {
 
     public List<String> getLastFewNotes(int CountOfNotes){
         List<String> list = new ArrayList<>();
+        if( CountOfNotes > notices.size()){
+            CountOfNotes = notices.size();
+        }
         int tempID = notices.size()  - CountOfNotes;
         for (int i = CountOfNotes; i>0; i--){
-            if(tempID!= -1) {
+            if(tempID > -1) {
                 writing = notices.get(tempID);
                 list.add(writing);
                 tempID++;
@@ -56,15 +59,18 @@ public class Notes {
     }
 
     public File getNotesAsFile () throws IOException{
-        File file = new File("notes.txt");
+        File file = new File("L:\\noted.txt");
         int counter = 1;
 
             FileWriter fileWriter = new FileWriter(file);
 
-            fileWriter.write("Your notes: \n");
-            for (String o : notices){
-                fileWriter.write(""+ counter +"- "+ o) ;
-                counter ++;
+            fileWriter.write("Your notes: \r\n");
+            if (!notices.isEmpty()) {
+                for (String notes : notices) {
+                    fileWriter.write("" + counter + " - " + notes+ "\r\n"  );
+
+                    counter++;
+                }
             }
             fileWriter.flush();
             fileWriter.close();
@@ -73,4 +79,7 @@ public class Notes {
 
     }
 
+    public boolean hasNotes (){
+        return (!notices.isEmpty());
+    }
 }

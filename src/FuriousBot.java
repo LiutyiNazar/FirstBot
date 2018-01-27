@@ -10,11 +10,14 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.exceptions.TelegramApiException;
 import sun.plugin.util.UserProfile;
 
+import java.io.IOException;
+
 
 /**
  * Created by Лютий on 26.10.2017.
  */
 public class FuriousBot extends TelegramLongPollingBot {
+    Notes note = new Notes();
 
     public static void main(String[] args) {
         ApiContextInitializer.init(); // Here we initialize our API
@@ -29,47 +32,60 @@ public class FuriousBot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update e) {
-
-        Message msg = e.getMessage();
-        Chat chat = msg.getChat();
-        String firstName = chat.getFirstName();
-        String secondName = chat.getLastName();
-        Users user = new Users(firstName,secondName);
-        String notice = null;
-       // Notes note = new Notes();
-        user.note = new Notes();
-        String txt = msg.getText();
+            Message msg = e.getMessage();
+            Chat chat = msg.getChat();
+            String firstName = chat.getFirstName();
+            String secondName = chat.getLastName();
+            String notice = null;
+            String txt = msg.getText();
 
         String writed = " Hello, " + firstName + " " + secondName + "!\nThis is " + getBotUsername() +
                 " ! \nI have now methods /start, /say_something ,\n" +
-                " /write_note( at the same line write your note )\n" +
-                " and method /get_last_note . \nYou can ty it!";
+                " /write_note( at the same line write your note,\n don`t use from tool-bar )\n" +
+                " /get_last_note , /notes_as_file ,\n " +
+                "/get_last5_notes \nYou can ty it!";
 
         if (txt.substring(0, 1).equals("/")) {
-            if (txt.equals("/start")) {
+            if (txt.equals("/start"))  {
+
                 sendMsg(msg, writed);
-            } else if (txt.equals("/say_something")) {
+
+            } else if (txt.equals("/say_something"))   {
+
                 sendMsg(msg, "Today is a good day!\n Just smile and shine!");
 
             } else if (txt.substring(0, 11).equals("/write_note")) {
 
                 if (txt.length() <= 12) {
                 sendMsg(msg, "Try again, your note was too short!");
+                }else {
+                    notice = txt.substring(11, txt.length());
+
+                    note.writeNote(notice);
+                    sendMsg(msg, "Your note has been saved! Id of your note is : " +  note.getLastID() +
+                            "\n Your note is : \n" +  note.getLastNote());
                 }
 
-            notice = txt.substring(11, txt.length());
 
-            user.note.writeNote(notice);
-            sendMsg(msg, "Your note has been saved! Id of your note is : " +  user.note.getLastID() +
-                    "\n Your note is : \n" +  user.note.getLastNote());
-        }else if (txt.substring(0,14).equals("/get_last_note")) {
+            }else if (txt.substring(0,14).equals("/get_last_note")) {
 
-                if ( user.note.getLastID() >=0 ) {
+                if ( note.getLastID() >=0 ) {
                     // int   Count = Integer.valueOf(txt.substring(19,20)); it`s for few notes
-                    sendMsg(msg, "Your last note: \n " +  user.note.getLastNote());
+                    sendMsg(msg, "Your last note: \n " +  note.getLastNote());
                 }else{
                     sendMsg(msg, "You don`t have any saved notes!\n" +
                             "Please, write some and try again.");
+                }
+            }else if (txt.substring(0,14).equals("/notes_as_file")){
+                try {
+                    Long chatID = msg.getChatId();
+                    if (note.hasNotes()) sendDocUploadingAFile(chatID, note.getNotesAsFile(), "Here are file with your notes");
+                }catch (Exception e1){
+                    System.out.println("We had file exeption");
+                }
+            }else if (txt.substring(0,16).equals("/get_last5_notes")){
+                for (String st: note.getLast_5_Notes()) {
+                    sendMsg(msg, st);
                 }
             }
 
@@ -78,21 +94,7 @@ public class FuriousBot extends TelegramLongPollingBot {
     }
 
 }
- /*   @SuppressWarnings("deprecation")
-    private File sendDocument(Message message, File file) {
-        SendDocument sen = new SendDocument();
-        sen.setChatId(message.getChatId());
-        org.telegram.telegrambots.api.objects.File ff = new org.telegram.telegrambots.api.objects.File()
-        ff= file;
-        sen.setNewDocument();
-        try {
-            super.sendDocument(sen);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }
 
-  */
 
     @SuppressWarnings("deprecation")
     private void sendMsg(Message msg, String text) {
@@ -106,6 +108,14 @@ public class FuriousBot extends TelegramLongPollingBot {
         }
     }
 
+    private void sendDocUploadingAFile(Long chatId, java.io.File save,String caption) throws TelegramApiException {
+
+        SendDocument sendDocumentRequest = new SendDocument();
+        sendDocumentRequest.setChatId(chatId);
+        sendDocumentRequest.setNewDocument(save);
+        sendDocumentRequest.setCaption(caption);
+        sendDocument(sendDocumentRequest);
+    }
 
 
 
